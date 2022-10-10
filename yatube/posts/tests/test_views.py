@@ -93,45 +93,45 @@ class PostPagesTests(TestCase):
 
     def test_create_show_correct_context(self):
         """Шаблон create сформирован с правильным контекстом."""
-        response = self.authorized_client.get(reverse("posts:post_create"))
+        response = self.authorized_client.get(reverse('posts:post_create'))
         form_fields = {
-            "text": forms.fields.CharField,
-            "group": forms.models.ModelChoiceField,
+            'text': forms.fields.CharField,
+            'group': forms.models.ModelChoiceField,
         }
         for value, expected in form_fields.items():
             with self.subTest(value=value):
-                form_field = response.context["form"].fields[value]
+                form_field = response.context['form'].fields[value]
                 self.assertIsInstance(form_field, expected)
 
     def test_post_edit_show_correct_context(self):
         """Шаблон post_edit сформирован с правильным контекстом."""
         response = self.authorized_client.get(
-            reverse("posts:post_edit", kwargs={"post_id": self.post.id})
+            reverse('posts:post_edit', kwargs={'post_id': self.post.id})
         )
         form_fields = {
-            "text": forms.fields.CharField,
-            "group": forms.models.ModelChoiceField,
+            'text': forms.fields.CharField,
+            'group': forms.models.ModelChoiceField,
         }
         for value, expected in form_fields.items():
             with self.subTest(value=value):
-                form_field = response.context["form"].fields[value]
+                form_field = response.context['form'].fields[value]
                 self.assertIsInstance(form_field, expected)
 
     def test_check_group_in_pages(self):
         """Проверяем создание поста с выбранной группой"""
         form_fields = {
-            reverse("posts:index"): Post.objects.get(group=self.post.group),
+            reverse('posts:index'): Post.objects.get(group=self.post.group),
             reverse(
-                "posts:group_list", kwargs={"slug": self.group.slug}
+                'posts:group_list', kwargs={'slug': self.group.slug}
             ): Post.objects.get(group=self.post.group),
             reverse(
-                "posts:profile", kwargs={"username": self.post.author}
+                'posts:profile', kwargs={'username': self.post.author}
             ): Post.objects.get(group=self.post.group),
         }
         for value, expected in form_fields.items():
             with self.subTest(value=value):
                 response = self.authorized_client.get(value)
-                form_field = response.context["page_obj"]
+                form_field = response.context['page_obj']
                 self.assertIn(expected, form_field)
 
     def test_check_group_not_in_mistake_group_list_page(self):
@@ -139,11 +139,11 @@ class PostPagesTests(TestCase):
         которой не был предназначен."""
         form_fields = {
             reverse(
-                "posts:group_list", kwargs={"slug": self.group.slug}
+                'posts:group_list', kwargs={'slug': self.group.slug}
             ): Post.objects.exclude(group=self.post.group),
         }
         for value, expected in form_fields.items():
             with self.subTest(value=value):
                 response = self.authorized_client.get(value)
-                form_field = response.context["page_obj"]
+                form_field = response.context['page_obj']
                 self.assertNotIn(expected, form_field)
