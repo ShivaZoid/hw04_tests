@@ -11,13 +11,13 @@ class PostURLTests(TestCase):
 
     def test_signup_url_exists_at_desired_location(self):
         """Страница /auth/signup/ доступна всем пользователям."""
-        response = self.guest_client.get("/auth/signup/")
+        response = self.guest_client.get('/auth/signup/')
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
         templates_url_names = {
-            "/auth/signup/": "users/signup.html",
+            '/auth/signup/': 'users/signup.html',
         }
         for url, template in templates_url_names.items():
             with self.subTest(template=template):

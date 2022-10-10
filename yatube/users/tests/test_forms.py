@@ -22,17 +22,17 @@ class CreationFormTests(TestCase):
         """Валидная форма создает нового пользователя."""
         users_count = User.objects.count()
         form_data = {
-            "first_name": "test_first_name",
-            "last_name": "test_last_name",
-            "username": "test_name",
-            "email": "email_test@mail.ru",
-            "password1": "Django_2022",
-            "password2": "Django_2022",
+            'first_name': 'test_first_name',
+            'last_name': 'test_last_name',
+            'username': 'test_name',
+            'email': 'email_test@mail.ru',
+            'password1': 'Django_2022',
+            'password2': 'Django_2022',
         }
         response = self.guest_client.post(
-            reverse("users:signup"), data=form_data, follow=True
+            reverse('users:signup'), data=form_data, follow=True
         )
-        self.assertRedirects(response, reverse("posts:index"))
+        self.assertRedirects(response, reverse('posts:index'))
         self.assertEqual(User.objects.count(), users_count + 1)
-        self.assertTrue(User.objects.filter(username="test_name").exists())
+        self.assertTrue(User.objects.filter(username='test_name').exists())
         self.assertEqual(response.status_code, HTTPStatus.OK)
