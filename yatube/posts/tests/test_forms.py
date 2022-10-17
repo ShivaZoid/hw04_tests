@@ -23,7 +23,7 @@ class PostFormTests(TestCase):
         form_data = {
             'text': 'Тестовый текст',
             'author': self.user,
-            }
+        }
         response = self.authorized_client.post(
             reverse('posts:post_create'),
             data=form_data,
@@ -55,7 +55,7 @@ class PostFormTests(TestCase):
         form_data = {
             'text': 'Изменяем текст',
             'group': self.group.id,
-            }
+        }
         response = self.authorized_client.post(
             reverse('posts:post_edit', args=({self.post.id})),
             data=form_data,
@@ -87,7 +87,7 @@ class PostFormTests(TestCase):
         form_data = {
             'text': 'Изменяем текст',
             'group': self.group.id,
-            }
+        }
         response = self.guest_client.post(
             reverse('posts:post_edit', args=({self.post.id})),
             data=form_data,
