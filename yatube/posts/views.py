@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden
 
 
-ITEMS_PER_PAGE = 5
+ITEMS_PER_PAGE: int = 5
 
 
 def index(request):

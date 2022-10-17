@@ -12,7 +12,7 @@ class CreationFormTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-        cls.user = User.objects.create()
+        cls.user = User.objects.create(username='NoName')
         cls.form = CreationForm()
 
     def setUp(self):
@@ -32,7 +32,18 @@ class CreationFormTests(TestCase):
         response = self.guest_client.post(
             reverse('users:signup'), data=form_data, follow=True
         )
+
+        self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertRedirects(response, reverse('posts:index'))
         self.assertEqual(User.objects.count(), users_count + 1)
-        self.assertTrue(User.objects.filter(username='test_name').exists())
-        self.assertEqual(response.status_code, HTTPStatus.OK)
+
+        # Не совсем понятно как проверить
+        # username и email:
+        # last_user = User.objects.order_by('id').last()
+        # self.assertEqual(last_user.username(?), ?...)
+        # self.assertEqual(last_user.email(?), ?...)
+
+        self.assertTrue(User.objects.filter(username='test_name').last().id)
+        self.assertTrue(User.objects
+                        .filter(email='email_test@mail.ru')
+                        .last().id)

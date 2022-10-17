@@ -17,13 +17,13 @@ class PostURLTests(TestCase):
             author=cls.user,
             text='Тестовый пост',
         )
-        cls.templates = [
+        cls.checklist = [
             '/',
             f'/group/{cls.group.slug}/',
             f'/profile/{cls.user}/',
             f'/posts/{cls.post.id}/',
         ]
-        cls.templates_url_names = {
+        cls.checklist_url_names = {
             '/': 'posts/index.html',
             f'/group/{cls.group.slug}/': 'posts/group_list.html',
             f'/profile/{cls.user.username}/': 'posts/profile.html',
@@ -41,7 +41,7 @@ class PostURLTests(TestCase):
         """Страницы: '/' '/group/<slug:slug>/' '/profile/<str:username>/'
         '/posts/<int:post_id>/'
         доступны любому пользователю."""
-        for adress in self.templates:
+        for adress in self.checklist:
             with self.subTest(adress):
                 response = self.guest_client.get(adress)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
@@ -50,21 +50,24 @@ class PostURLTests(TestCase):
         """Страница /create/ перенаправит анонимного пользователя на страницу
         логина."""
         response = self.guest_client.get('/create/', follow=True)
+
         self.assertRedirects(response, '/auth/login/?next=/create/')
 
     def test_post_edit_url_exists_author(self):
         """Страница /posts/<int:post_id>/edit/ доступна автору."""
         response = self.authorized_client.get(f'/posts/{self.post.id}/edit/')
+
         self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_404_page(self):
         """Несуществующая страница должна выдать ошибку."""
         response = self.guest_client.get('/world/')
+
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
 
     def test_urls_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
-        for url, template in self.templates_url_names.items():
+        for url, template in self.checklist_url_names.items():
             with self.subTest(template=template):
                 response = self.authorized_client.get(url)
                 self.assertTemplateUsed(response, template)
