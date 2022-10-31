@@ -1,3 +1,5 @@
+{% load thumbnail %}
+{% include 'includes/switcher.html' %}
 {% for post in page_obj %}
     <div class="container">
         <p></p>
@@ -9,6 +11,14 @@
                 Дата публикации: {{ post.pub_date|date:"d E Y" }}
             </li>
         </ul>
+        {% thumbnail post.image "960x339" crop="center" upscale=True as im %}
+            <img
+            class="card-img my-2"
+            src="{{ im.url }}"
+            width="{{ im.width }}"
+            height="{{ im.height }}"
+            >
+        {% endthumbnail %}
         <p>{{ post.text }}</p>
         {% if not group.slug %}
             {% if post.group %}

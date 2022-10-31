@@ -28,6 +28,7 @@
             <div class="card-body">
                 <form method="POST"
                 class="post-form"
+                enctype="multipart/form-data"
                 action=
                 {% if changed %}
                     "{% url 'posts:post_edit' post.id %}">

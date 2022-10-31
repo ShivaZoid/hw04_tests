@@ -1,11 +1,7 @@
 from django.test import Client, TestCase
 from django.urls import reverse
 from django import forms
-from ..models import Post, Group, User
-
-TEST_ALL_POSTS: int = 8
-TEST_FIRST_PAGE_POSTS: int = 5
-TEST_SECOND_PAGE_POSTS: int = 3
+from ..models import Post, Group, User, Comment, Follow
 
 
 class PostPagesTests(TestCase):
@@ -23,6 +19,7 @@ class PostPagesTests(TestCase):
             text='Тестовый пост',
             group=cls.group,
         )
+
         cls.templates_pages_names = {
             reverse('posts:index'): 'posts/index.html',
             reverse(
@@ -127,8 +124,72 @@ class PostPagesTests(TestCase):
                 form_field = response.context['page_obj']
                 self.assertNotIn(expected, form_field)
 
+    def test_comment_correct_context(self):
+        """Валидная форма Комментария создает запись в Post."""
+        self.comment = Comment.objects.create(
+            author=self.user,
+            text='Тестовый коммент',
+        )
+        last_comment = Comment.objects.order_by('id').last()
+        comments_count = Comment.objects.count()
+        form_data = {'text': 'Тестовый коммент'}
+        response = self.authorized_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': self.post.id}),
+            data=form_data,
+            follow=True,
+        )
+
+        self.assertRedirects(
+            response, reverse(
+                'posts:post_detail', kwargs={'post_id': self.post.id}
+            )
+        )
+        self.assertEqual(Comment.objects.count(), comments_count + 1)
+        self.assertEqual(str(last_comment), self.comment.text)
+        self.assertEqual(last_comment.author, self.comment.author)
+
+    def test_cache(self):
+        """Проверка кеша."""
+        client = self.guest_client.get(reverse('posts:index'))
+        response_1 = client
+        post_cache_1 = response_1.content
+
+        Post.objects.get(id=1).delete()
+        response_2 = client
+        post_cache_2 = response_2.content
+        self.assertEqual(post_cache_1, post_cache_2)
+
+    def test_follow_page(self):
+        """Проверка подписки."""
+        # страница подписок пуста
+        response_1 = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertEqual(len(response_1.context['page_obj']), 0)
+
+        # подписка на автора
+        Follow.objects.get_or_create(user=self.user, author=self.post.author)
+        response_2 = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertEqual(len(response_2.context['page_obj']), 1)
+        # проверка подписки у фоловера
+        self.assertIn(self.post, response_2.context['page_obj'])
+
+        # пост не появиляется в избранных у другого юзера
+        user_wrong = User.objects.create(username='NoName_2')
+        self.authorized_client.force_login(user_wrong)
+        response_3 = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertNotIn(self.post, response_3.context['page_obj'])
+
+        # отписка от автора поста
+        Follow.objects.all().delete()
+        response_4 = self.authorized_client.get(reverse('posts:follow_index'))
+        self.assertEqual(len(response_4.context['page_obj']), 0)
+
 
 class PaginatorViewsTest(TestCase):
+
+    TEST_ALL_POSTS: int = 8
+    TEST_FIRST_PAGE_POSTS: int = 5
+    TEST_SECOND_PAGE_POSTS: int = 3
+
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -141,7 +202,7 @@ class PaginatorViewsTest(TestCase):
             description='Тестовое описание',
             slug='test-slug'
         )
-        cls.templates_pages_names = {
+        cls.templates_pages_names_2 = {
             reverse('posts:index'): 'posts/index.html',
             reverse(
                 'posts:group_list', kwargs={'slug': cls.group.slug}
@@ -152,7 +213,7 @@ class PaginatorViewsTest(TestCase):
         }
 
     def setUp(self):
-        for post_temp in range(TEST_ALL_POSTS):
+        for post_temp in range(self.TEST_ALL_POSTS):
             Post.objects.create(
                 text=f'text{post_temp}',
                 author=self.author,
@@ -160,17 +221,23 @@ class PaginatorViewsTest(TestCase):
             )
 
     def test_first_page_contains_eight_records(self):
-        for template, reverse_name in self.templates_pages_names.items():
+        """Провека пагинации, первая страница."""
+
+        for template, reverse_name in self.templates_pages_names_2.items():
             with self.subTest(reverse_name=reverse_name):
                 response = self.guest_client.get(template)
                 self.assertEqual(
-                    len(response.context['page_obj']), TEST_FIRST_PAGE_POSTS
+                    len(response.context['page_obj']),
+                    self.TEST_FIRST_PAGE_POSTS
                 )
 
     def test_second_page_contains_three_records(self):
-        for template, reverse_name in self.templates_pages_names.items():
+        """Провека пагинации вторая страница."""
+
+        for template, reverse_name in self.templates_pages_names_2.items():
             with self.subTest(reverse_name=reverse_name):
                 response = self.guest_client.get(template + '?page=2')
                 self.assertEqual(
-                    len(response.context['page_obj']), TEST_SECOND_PAGE_POSTS
+                    len(response.context['page_obj']),
+                    self.TEST_SECOND_PAGE_POSTS
                 )

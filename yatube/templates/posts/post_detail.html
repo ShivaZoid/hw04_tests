@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
+{% load thumbnail %}
 
 {% block title %}
     <title> Пост {{ post_info.text|truncatechars:30 }}</title>
 {% endblock %}
 
 {% block content %}
+    <div class="container py-5">
     <div class="row">
         <aside class="col-12 col-md-3">
         <ul class="list-group list-group-flush">
@@ -42,7 +44,17 @@
         </ul>
         </aside>
         <article class="col-12 col-md-9">
+        {% thumbnail post_info.image "960x339" crop="center" upscale=True as im %}
+            <img
+            class="card-img my-2"
+            src="{{ im.url }}"
+            width="{{ im.width }}"
+            height="{{ im.height }}"
+            >
+        {% endthumbnail %}
         <p>{{ post_info.text }}</p>
+        {% include 'includes/comment.html' %}
         </article>
+    </div>
     </div>
 {% endblock %}
